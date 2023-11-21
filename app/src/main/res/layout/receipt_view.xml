@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ll_wholeReceipt"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="5dp"
+    android:paddingLeft="15dp"
+    android:paddingRight="15dp"
+    android:background="@drawable/bg_receipt"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        >
+        <TextView
+            android:id="@+id/txt_receipt_kind"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/receipt_nbb_1_launch"
+            style="@style/style_receipt_kind"
+            android:background="@drawable/bg_receipt_kind"
+            />
+
+        <EditText
+            android:id="@+id/edt_receipt_amount"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:inputType="number"
+            android:gravity="right"
+            tools:ignore="RtlHardcoded" />
+
+        <TextView
+            android:id="@+id/txt_receipt_unit"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="3dp"
+            android:layout_marginEnd="5dp"
+            android:text="@string/unit"
+            style="@style/style_receipt_unit"
+            />
+
+        <TextView
+            android:id="@+id/txt_receipt_pay"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.2"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="3dp"
+            android:text="@string/pay"
+            style="@style/style_receipt_pay"
+            android:background="@drawable/bg_player_name_pay"
+
+            />
+        <ImageButton
+            android:id="@+id/imgBtn_receipt_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:src="@drawable/outline_cancel_24"
+            android:background="@color/transparent"
+            app:tint="@color/ksd_red" />
+
+
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rcy_receipt_player"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="10dp"
+        android:overScrollMode="never"
+        />
+
+
+</LinearLayout>

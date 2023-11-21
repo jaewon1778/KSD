@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:tools="http://schemas.android.com/tools" xmlns:android="http://schemas.android.com/apk/res/android" tools:ignore="StateListReachable">
+    <item>
+        <shape>
+            <solid android:color="@color/black"/>
+            <stroke android:color="@color/grey"
+                android:width="2dp"/>
+            <corners android:radius="100dp"/>
+        </shape>
+    </item>
+</selector>

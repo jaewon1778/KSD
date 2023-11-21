@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_calculation">
+
+    <fragment
+        android:id="@+id/navigation_calculation"
+        android:name="com.jaewon.KSD.ui.calculation.CalculationFragment"
+        android:label="@string/title_calculation"
+        tools:layout="@layout/fragment_calculation" />
+
+    <fragment
+        android:id="@+id/navigation_whoIsFirst"
+        android:name="com.jaewon.KSD.ui.WhoIsFirst.WhoIsFirstFragment"
+        android:label="@string/title_whoIsFirst"
+        tools:layout="@layout/fragment_whoisfirst" />
+
+    <fragment
+        android:id="@+id/navigation_record"
+        android:name="com.jaewon.KSD.ui.record.RecordFragment"
+        android:label="@string/title_record"
+        tools:layout="@layout/fragment_record" />
+</navigation>

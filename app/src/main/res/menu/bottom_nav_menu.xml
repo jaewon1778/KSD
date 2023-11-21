@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_calculation"
+        android:icon="@drawable/baseline_currency_exchange_24"
+        android:title="@string/title_calculation" />
+
+    <item
+        android:id="@+id/navigation_whoIsFirst"
+        android:icon="@drawable/baseline_filter_1_24"
+        android:title="@string/title_whoIsFirst" />
+
+    <item
+        android:id="@+id/navigation_record"
+        android:icon="@drawable/baseline_edit_note_24"
+        android:title="@string/title_record" />
+
+</menu>

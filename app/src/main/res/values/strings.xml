@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">KSD</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_calculation">돈 계산</string>
+    <string name="title_whoIsFirst">선 잡기</string>
+    <string name="title_record">기록</string>
+    <string name="space">" "</string>
+    <string name="receipt_nbb_1_launch">" 점심 "</string>
+    <string name="receipt_nbb_2_dinner">" 저녁 "</string>
+    <string name="receipt_nbb_3_midnightSnack">" 야식 "</string>
+    <string name="receipt_nbb_4_NBB">" N빵 "</string>
+    <string name="pay">" 계산 "</string>
+    <string name="unit">원</string>
+    <string name="receipt_game_1_standUp">" 섯다 "</string>
+    <string name="receipt_game_2_goStop">" 고스톱 "</string>
+    <string name="receipt_game_3_holdem">" 홀덤 "</string>
+    <string name="receipt_game_4_highLow">" 하이로우 "</string>
+    <string name="receipt_game_5_geneLowest">" 대천민 "</string>
+    <string name="receipt_game_6_game">" 게임 "</string>
+    <string name="total_sum">총합: </string>
+    <string name="surplus">흑자</string>
+    <string name="surplus_sum">합: +</string>
+    <string name="deficit">적자</string>
+    <string name="deficit_sum">합: -</string>
+    <string name="zero">0</string>
+    <string name="dialog_AP_info_front">터치하여 </string>
+
+    <string name="dialog_AP_info_back">선택</string>
+
+    <string name="cancel">취소</string>
+    <string name="confirm">확인</string>
+
+
+
+
+</resources>
