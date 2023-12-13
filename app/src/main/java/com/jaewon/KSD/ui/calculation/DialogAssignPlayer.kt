@@ -25,11 +25,11 @@ class DialogAssignPlayer(context: Context) {
         rcyDapPlayer.addItemDecoration(CalculationViewModel.PNRecyclerViewDecoration(10))
         rcyDapPlayer.apply {
             layoutManager = GridLayoutManager(context, 5)
-            adapter =playerNameAdapter
+            adapter = playerNameAdapter
         }
 
         dialog.findViewById<Button>(R.id.btn_dap_confirm).setOnClickListener {
-            onClickedListener.onClicked(playerNameAdapter.pnList)
+            onClickedListener.onClicked()
             dialog.dismiss()
         }
         dialog.findViewById<Button>(R.id.btn_dap_cancel).setOnClickListener {
@@ -40,7 +40,7 @@ class DialogAssignPlayer(context: Context) {
     }
 
     interface ButtonClickListener {
-        fun onClicked(pnGameResultList:MutableList<Player>)
+        fun onClicked()
     }
     private lateinit var onClickedListener : ButtonClickListener
 

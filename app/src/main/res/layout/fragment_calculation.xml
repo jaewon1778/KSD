@@ -29,6 +29,7 @@
                 />
 
             <ImageButton
+                android:id="@+id/imgBtn_settingPlayer"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:src="@drawable/baseline_person_add_alt_1_24"
@@ -78,6 +79,17 @@
                         android:layout_height="wrap_content"
                         android:text="게임"
                         />
+                    <Button
+                        android:id="@+id/btn_calReceipt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="계산"
+                        />
+                    <Button
+                        android:id="@+id/btn_test"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="실험"/>
 
                 </LinearLayout>
 

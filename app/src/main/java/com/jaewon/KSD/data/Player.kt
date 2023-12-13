@@ -6,4 +6,5 @@ data class Player(
     var stateOn : Boolean = true,
     var statePay : Boolean = false,
     var gameSurplus : Boolean = true,
+    var amount: Int = 0
 )

@@ -12,6 +12,7 @@
     <style name="style_receipt_kind">
         <item name="android:textAlignment">center</item>
         <item name="android:textSize">30sp</item>
+        <item name="android:layout_gravity">center</item>
     </style>
     <style name="style_receipt_pay">
         <item name="android:textAlignment">center</item>
@@ -21,7 +22,7 @@
     <style name="style_receipt_unit">
         <item name="android:textAlignment">center</item>
         <item name="android:textSize">22sp</item>
-        <item name="android:gravity">center</item>
+        <item name="android:gravity">top</item>
     </style>
 
 

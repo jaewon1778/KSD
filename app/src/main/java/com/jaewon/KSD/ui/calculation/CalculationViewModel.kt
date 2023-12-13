@@ -2,55 +2,28 @@ package com.jaewon.KSD.ui.calculation
 
 import android.annotation.SuppressLint
 import android.graphics.Color
-import android.graphics.ColorSpace
 import android.graphics.Rect
 import android.icu.text.DecimalFormat
-import android.net.wifi.p2p.WifiP2pManager.PeerListListener
 import android.text.Editable
 import android.text.TextUtils
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import androidx.core.view.marginTop
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.jaewon.KSD.R
 import com.jaewon.KSD.data.Player
+import com.jaewon.KSD.data.ReceiptInfo
 import com.jaewon.KSD.databinding.PlayerNameBinding
 import com.jaewon.KSD.databinding.PlayerWMoneyBinding
+import java.security.PKCS12Attribute
 
 class CalculationViewModel : ViewModel() {
 
     var nameList = mutableListOf<String>("고", "오", "성", "석", "찬", "영", "김", "이", "박")
     val pnAllList = players(nameList)
-
-    fun makeComma(input:Int): String? {
-        val formatter = DecimalFormat("###,###")
-        return formatter.format(input)
-    }
-
-    fun commaUpgrade(editText: EditText) {
-
-        editText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-            }
-
-            override fun afterTextChanged(s: Editable?) {
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (!TextUtils.isEmpty(s.toString()) && !s.toString().equals(editText.text)) {
-                    editText.setText(makeComma(Integer.parseInt(s.toString().replace(",", ""))))
-                    editText.setSelection(editText.text.length)  //커서를 오른쪽 끝으로 보냄
-                }
-            }
-
-        })
-    }
+    val receiptInfoList = mutableListOf<ReceiptInfo>()
 
     fun getActivePNList(): MutableList<Player>{
         val activePNList = mutableListOf<Player>()
@@ -60,6 +33,15 @@ class CalculationViewModel : ViewModel() {
         }
 
         return activePNList
+    }
+
+    fun getCalculatedActivePNList(): MutableList<Player>{
+        val newActivePNList = getActivePNList()
+        for (receipt in receiptInfoList){
+            receipt.calculateReceipt(newActivePNList)
+        }
+
+        return newActivePNList
     }
 
     class PlayerNameAdapter : RecyclerView.Adapter<PlayerNameAdapter.PlayerNameViewHolder>() {
@@ -88,6 +70,7 @@ class CalculationViewModel : ViewModel() {
                         it.setBackgroundResource(R.drawable.bg_player_name_off)
                         player.statePay = false
                     }
+                    onPNBBChangeListener.onPNBBChanged()
                 }
                 binding.txtPlayerName.setOnLongClickListener {
                     if (!player.stateOn) return@setOnLongClickListener true
@@ -130,8 +113,20 @@ class CalculationViewModel : ViewModel() {
                 }
 
             }
+            fun bindForSettingPlayer(){
+
+            }
 
         }
+        interface PNBBChangeListener {
+            fun onPNBBChanged()
+        }
+        private lateinit var onPNBBChangeListener : PNBBChangeListener
+
+        fun setOnPNBBChangeListener (listener: PNBBChangeListener){
+            onPNBBChangeListener = listener
+        }
+
 
         override fun onCreateViewHolder(
             parent: ViewGroup,
@@ -164,7 +159,11 @@ class CalculationViewModel : ViewModel() {
             @SuppressLint("NotifyDataSetChanged")
             fun bind(player:Player){
                 binding.txtPwmName.text = player.name
-                var pointNumStr = ""
+                var pointNumInt = player.amount
+                var pointNumStr = DecimalFormat("###,###,###").format(pointNumInt)
+                if (pointNumInt != 0){
+                    binding.edtPwmAmount.setText(pointNumStr)
+                }
                 binding.edtPwmAmount.addTextChangedListener(object : TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                     }
@@ -173,16 +172,34 @@ class CalculationViewModel : ViewModel() {
                     }
 
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                        if (!TextUtils.isEmpty(s.toString()) && !s.toString().equals(pointNumStr)) {
-                            pointNumStr = DecimalFormat("###,###").format(Integer.parseInt(s.toString().replace(",", "")))
+                        if (TextUtils.isEmpty(s.toString())){
+                            pointNumInt = 0
+                            pointNumStr = ""
+                        }
+                        if (s.toString() != pointNumStr) {
+                            pointNumInt = Integer.parseInt(s.toString().replace(",", ""))
+                            pointNumStr = DecimalFormat("###,###,###").format(pointNumInt)
                             binding.edtPwmAmount.setText(pointNumStr)
                             binding.edtPwmAmount.setSelection(pointNumStr.length)  //커서를 오른쪽 끝으로 보냄
                         }
+                        player.amount = pointNumInt
+                        onPMChangeListener.onPMChanged()
                     }
 
                 })
             }
+
         }
+
+        interface PMChangeListener {
+            fun onPMChanged()
+        }
+        private lateinit var onPMChangeListener : PMChangeListener
+
+        fun setOnPMChangeListener (listener: PMChangeListener){
+            onPMChangeListener = listener
+        }
+
         override fun onCreateViewHolder(
             parent: ViewGroup,
             viewType: Int
