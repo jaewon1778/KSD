@@ -98,17 +98,19 @@ class CalculationFragment : Fragment() {
             val zeroGroupList: MutableList<Group> = list2Group(zeroPList, 0)
 
             val dividedGroupList = divGroup(surplusGroupList, deficitGroupList)
-            for (divG in dividedGroupList){
-                var txt = ""
-                for (pairTI in divG.typeIndexList){
-                    when(pairTI.first){
-                        1 -> txt += surplusPList[pairTI.second].name
-                        -1 -> txt += deficitPList[pairTI.second].name
-                    }
-                }
-                Toast.makeText(mainActivity, txt, Toast.LENGTH_SHORT).show()
+//            for (divG in dividedGroupList){
+//                var txt = ""
+//                for (sI in divG.surplusIndexMoneyList){
+//                    txt += surplusPList[sI.first].name
+//                }
+//                for (dI in divG.deficitIndexMoneyList){
+//                    txt += deficitPList[dI.first].name
+//                }
+//                Toast.makeText(mainActivity, txt, Toast.LENGTH_SHORT).show()
+//            }
+            for (divG in dividedGroupList) {
+                remitWho(divG) // 여기에서 리턴 값 받아서 표시하기 해야함 일단 인터페이스부터 만들어야할듯
             }
-
         }
 
         /// 실험용
@@ -124,13 +126,60 @@ class CalculationFragment : Fragment() {
         return root
     }
 
+    fun remitWho(dividedGroup:Group):MutableList<Triple<Pair<Int,Int>,Pair<Int,Int>,Int>>{
+        val remitList: MutableList<Triple<Pair<Int,Int>,Pair<Int,Int>,Int>> = mutableListOf() //0이 1에게 2만큼 보내세요
+
+        if (dividedGroup.surplusIndexMoneyList.size == 1){
+            remitList.add(Triple(Pair(0,0), Pair(1,dividedGroup.surplusIndexMoneyList[0].first),0))
+            return remitList
+        }
+        if (dividedGroup.deficitIndexMoneyList.size == 1){
+            remitList.add(Triple(Pair(-1,dividedGroup.deficitIndexMoneyList[0].first), Pair(0,0),0))
+            return remitList
+        }
+
+
+        dividedGroup.sortList()
+        val surplusArray: Array<Pair<Int,Int>> = dividedGroup.surplusIndexMoneyList.toTypedArray()
+        val surplusLastIndex: Int = surplusArray.size - 1
+        for ((index,deficitP) in dividedGroup.deficitIndexMoneyList.withIndex()){
+            if (index == dividedGroup.deficitIndexMoneyList.size - 1){
+                surplusArray[surplusLastIndex] = Pair(surplusArray[surplusLastIndex].first, surplusArray[surplusLastIndex].second + deficitP.second)
+                remitList.add(Triple(Pair(-1,deficitP.first), Pair(1,surplusArray[surplusLastIndex].first),deficitP.second))
+            }
+            val sIndex = if (index < surplusLastIndex) index else index - surplusLastIndex + 1
+            surplusArray[sIndex] = Pair(surplusArray[sIndex].first, surplusArray[sIndex].second + deficitP.second)
+            remitList.add(Triple(Pair(-1,deficitP.first), Pair(1,surplusArray[sIndex].first),deficitP.second))
+
+        }
+        var firstMinus: Int? = surplusArray.indices.find { surplusArray[it].second < 0 }
+        for (overP in surplusArray){
+            if (overP.second == 0) break
+            surplusArray[firstMinus!!] = Pair(surplusArray[firstMinus].first, surplusArray[firstMinus].second + overP.second)
+            remitList.add(Triple(Pair(1,overP.first), Pair(1,surplusArray[firstMinus].first), overP.second))
+            if (surplusArray[firstMinus].second + overP.second >= 0) firstMinus++
+        }
+        return remitList
+
+    }
+
     fun list2Group(playerList:MutableList<Player>, groupType: Int) : MutableList<Group>{
         val newGroupList = mutableListOf<Group>()
-        for ((index,player) in playerList.withIndex()){
-            val newG = Group()
-            newG.typeIndexList.add(Pair(groupType,index))
-            newG.totalAmount = player.amount
-            newGroupList.add(newG)
+        if (groupType == 1){
+            for ((index,player) in playerList.withIndex()){
+                val newG = Group()
+                newG.surplusIndexMoneyList.add(Pair(index,player.amount))
+                newG.totalAmount = player.amount
+                newGroupList.add(newG)
+            }
+        }
+        else {
+            for ((index,player) in playerList.withIndex()){
+                val newG = Group()
+                newG.deficitIndexMoneyList.add(Pair(index,player.amount))
+                newG.totalAmount = player.amount
+                newGroupList.add(newG)
+            }
         }
         return newGroupList
     }
@@ -175,16 +224,23 @@ class CalculationFragment : Fragment() {
             basIndex++
 
             if (marker){
-                for (pairOfTI in dividedGroupList.last().typeIndexList){
-                    when(pairOfTI.first*comparisonValue){
-                        1 -> comparisonGroupList.removeIf{it.typeIndexList.contains(pairOfTI)}
-                        -1 -> basicGroupList.removeIf{it.typeIndexList.contains(pairOfTI)}
-
-                    }
-                    when(pairOfTI.first){
-                        1 -> surplusGroupList.removeIf{it.typeIndexList.contains(pairOfTI)}
-                        -1 -> deficitGroupList.removeIf{it.typeIndexList.contains(pairOfTI)}
-                    }
+                val sGL : MutableList<Group>
+                val dGL : MutableList<Group>
+                if (comparisonValue == 1){
+                    sGL = comparisonGroupList
+                    dGL = basicGroupList
+                }
+                else {
+                    dGL = comparisonGroupList
+                    sGL = basicGroupList
+                }
+                for (surplusPairOfIM in dividedGroupList.last().surplusIndexMoneyList){
+                    sGL.removeIf{it.surplusIndexMoneyList.contains(surplusPairOfIM)}
+                    surplusGroupList.removeIf{it.surplusIndexMoneyList.contains(surplusPairOfIM)}
+                }
+                for (deficitPairOfIM in dividedGroupList.last().deficitIndexMoneyList){
+                    dGL.removeIf{it.deficitIndexMoneyList.contains(deficitPairOfIM)}
+                    deficitGroupList.removeIf{it.deficitIndexMoneyList.contains(deficitPairOfIM)}
                 }
                 basIndex = 0
                 marker = false
@@ -212,10 +268,11 @@ class CalculationFragment : Fragment() {
         for ( group in groupList){
             val size = newGroupList.size
             for (indexOfSubset in 0 until size){
-                if (newGroupList[indexOfSubset].typeIndexList.size == maxSize) continue
+                if (newGroupList[indexOfSubset].maxSize() == maxSize) continue
                 newGroupList.add(newGroupList[indexOfSubset]+group)
             }
         }
+
         newGroupList.removeAt(0)
         newGroupList.sortBy { abs(it.totalAmount) }
         return newGroupList
