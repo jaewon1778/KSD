@@ -17,12 +17,11 @@ import com.jaewon.KSD.data.Player
 import com.jaewon.KSD.data.ReceiptInfo
 import com.jaewon.KSD.databinding.PlayerNameBinding
 import com.jaewon.KSD.databinding.PlayerWMoneyBinding
-import java.security.PKCS12Attribute
 
 class CalculationViewModel : ViewModel() {
 
-    var nameList = mutableListOf<String>("고", "오", "성", "석", "찬", "영", "김", "이", "박")
-    val pnAllList = players(nameList)
+    private var nameList = mutableListOf<String>("고", "오", "성", "석", "찬", "영", "현", "도", "장", "민")
+    val pnAllList = string2PlayerList(nameList)
     val receiptInfoList = mutableListOf<ReceiptInfo>()
 
     fun getActivePNList(): MutableList<Player>{
@@ -52,6 +51,18 @@ class CalculationViewModel : ViewModel() {
             @SuppressLint("NotifyDataSetChanged")
             fun bind(player:Player){
                 binding.txtPlayerName.text = player.name
+
+                if (player.active) binding.txtPlayerName.setBackgroundResource(R.drawable.bg_player_name)
+                else binding.txtPlayerName.setBackgroundResource(R.drawable.bg_player_name_off)
+
+                binding.txtPlayerName.setOnClickListener {
+                    player.active = !player.active
+                    if (player.active) it.setBackgroundResource(R.drawable.bg_player_name)
+                    else {
+                        it.setBackgroundResource(R.drawable.bg_player_name_off)
+                    }
+                    onActivePChangeListener.onActivePChanged(player)
+                }
             }
             @SuppressLint("NotifyDataSetChanged")
             fun bindForReceiptNBB(player: Player) {
@@ -113,9 +124,6 @@ class CalculationViewModel : ViewModel() {
                 }
 
             }
-            fun bindForSettingPlayer(){
-
-            }
 
         }
         interface PNBBChangeListener {
@@ -125,6 +133,14 @@ class CalculationViewModel : ViewModel() {
 
         fun setOnPNBBChangeListener (listener: PNBBChangeListener){
             onPNBBChangeListener = listener
+        }
+
+        interface ActivePChangeListener {
+            fun onActivePChanged(player: Player)
+        }
+        private lateinit var onActivePChangeListener: ActivePChangeListener
+        fun setOnActivePChangeListener (listener: ActivePChangeListener){
+            onActivePChangeListener = listener
         }
 
 
@@ -143,6 +159,7 @@ class CalculationViewModel : ViewModel() {
                 0 -> holder.bind(pnList[position])
                 1 -> holder.bindForReceiptNBB(pnList[position])
                 2 -> holder.bindForGameAssignPlayer(pnList[position])
+//                3 -> holder.bindForSettingPlayer(pnList[position])
             }
 
         }
@@ -232,12 +249,18 @@ class CalculationViewModel : ViewModel() {
             outRect.bottom = space
         }
     }
-    fun players(nameList: MutableList<String>):MutableList<Player>{
+    fun string2PlayerList(nameList: MutableList<String>):MutableList<Player>{
         val pnList : MutableList<Player> = mutableListOf()
         for(name in nameList){
             pnList.add(Player(name))
         }
         return pnList
+    }
+
+    fun checkAllReceipt(){
+        for (receipt in receiptInfoList){
+            receipt
+        }
     }
 
 }

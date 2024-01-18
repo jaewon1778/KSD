@@ -7,4 +7,14 @@ data class Player(
     var statePay : Boolean = false,
     var gameSurplus : Boolean = true,
     var amount: Int = 0
-)
+) {
+    fun dupPlayer(oldPlayer: Player) {
+        name = oldPlayer.name
+        active = oldPlayer.active
+        stateOn = oldPlayer.stateOn
+        statePay = oldPlayer.statePay
+        gameSurplus = oldPlayer.gameSurplus
+        amount = oldPlayer.amount
+    }
+
+}

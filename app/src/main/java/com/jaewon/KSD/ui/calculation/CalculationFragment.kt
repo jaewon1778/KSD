@@ -15,6 +15,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
@@ -58,13 +59,20 @@ class CalculationFragment : Fragment() {
         val rcyPlayerName: RecyclerView = binding.rcyPlayerName
         val playerNameAdapter = CalculationViewModel.PlayerNameAdapter()
         playerNameAdapter.pnList = calculationViewModel.pnAllList
+        playerNameAdapter.setOnActivePChangeListener(object : CalculationViewModel.PlayerNameAdapter.ActivePChangeListener{
+            override fun onActivePChanged(player: Player) {
+                for (receiptInfo in calculationViewModel.receiptInfoList){
+                    receiptInfo.updatePlayers(calculationViewModel.getActivePNList(), player.active)
+
+                }
+
+            }
+        })
+
         rcyPlayerName.addItemDecoration(CalculationViewModel.PNRecyclerViewDecoration(20))
         rcyPlayerName.apply {
             layoutManager = LinearLayoutManager(mainActivity,LinearLayoutManager.HORIZONTAL,false)
             adapter = playerNameAdapter
-        }
-        binding.imgBtnSettingPlayer.setOnClickListener {
-
         }
 
         binding.btnAddNBBReceipt.setOnClickListener {
@@ -75,9 +83,45 @@ class CalculationFragment : Fragment() {
         }
 
         binding.btnCalReceipt.setOnClickListener {
+            // 영수증 확인 함수
+            if (calculationViewModel.receiptInfoList.size == 0) {
+                Toast.makeText(mainActivity,"계산할 내역이 없습니다.",Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            var receiptName = ""
+            var solution = ""
+            for ((index,receipt) in calculationViewModel.receiptInfoList.withIndex()) {
+                when(receipt.isReadyForCal()){
+                    0 -> continue
+                    1 -> {
+                        receiptName = binding.llReceiptNote[index].findViewById<TextView>(R.id.txt_receipt_kind).text.trim() as String
+                        solution = "의 총액을 입력해주세요."
+                        break
+                    }
+                    2 -> {
+                        receiptName = binding.llReceiptNote[index].findViewById<TextView>(R.id.txt_receipt_kind).text.trim() as String
+                        solution = "을 계산한 사람을 선택해주세요."
+                        break
+                    }
+                    3 -> {
+                        receiptName = binding.llReceiptNote[index].findViewById<TextView>(R.id.txt_game_kind).text.trim() as String
+                        solution = "의 총합을 0원으로 맞춰주세요."
+                        break
+                    }
+                }
+            }
+
+            if (receiptName != "") {
+                Toast.makeText(mainActivity,receiptName + solution,Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             val calculatedPlayerList = calculationViewModel.getCalculatedActivePNList()
 
-//            Toast.makeText(mainActivity,calculatedPlayerList[0].name + calculatedPlayerList[0].amount.toString(),Toast.LENGTH_SHORT).show()
+            for (p in calculatedPlayerList){
+                Toast.makeText(mainActivity,p.name + p.amount.toString(),Toast.LENGTH_SHORT).show()
+            }
 
             // 무리 나누기 함수
             // 송금하기 함수
@@ -115,12 +159,12 @@ class CalculationFragment : Fragment() {
 
         /// 실험용
         binding.btnTest.setOnClickListener {
-            val newReceipt : View = if (calculationViewModel.receiptInfoList[0].typeOfReceipt == 1){
-                createNBBView(calculationViewModel.receiptInfoList[0])
-            } else {
-                createGameView(calculationViewModel.receiptInfoList[0])
-            }
-            binding.llReceiptNote.addView(newReceipt,-1)
+//            val newReceipt : View = if (calculationViewModel.receiptInfoList[0].typeOfReceipt == 1){
+//                createNBBView(calculationViewModel.receiptInfoList[0])
+//            } else {
+//                createGameView(calculationViewModel.receiptInfoList[0])
+//            }
+//            binding.llReceiptNote.addView(newReceipt,-1)
         }
         /// 실험용
         return root
@@ -359,6 +403,14 @@ class CalculationFragment : Fragment() {
             }
         })
 
+        receiptInfo.setOnUpdatePListener(object : ReceiptInfo.UpdatePListener{
+            @SuppressLint("NotifyDataSetChanged")
+            override fun onUpdateP() {
+                playerNameAdapter.pnList = receiptInfo.players
+                playerNameAdapter.notifyDataSetChanged()
+            }
+        })
+
         val imgBtnReceiptDelete = newNBBReceipt.findViewById<ImageButton>(R.id.imgBtn_receipt_delete)
         imgBtnReceiptDelete.setOnClickListener {
             binding.llReceiptNote.removeView(newNBBReceipt)
@@ -377,7 +429,7 @@ class CalculationFragment : Fragment() {
         binding.llReceiptNote.addView(newGameReceipt,-1)
     }
 
-    @SuppressLint("MissingInflatedId")
+    @SuppressLint("MissingInflatedId", "InflateParams")
     private fun createGameView(receiptInfo: ReceiptInfo): View {
         val newGameReceipt = LayoutInflater.from(mainActivity).inflate(R.layout.game_result_view, null, false)
 
@@ -407,6 +459,7 @@ class CalculationFragment : Fragment() {
                 }
                 txtSurplusAmount.text = DecimalFormat("###,###,###").format(surplusAmount)
                 txtTotalAmount.text = DecimalFormat("###,###,###").format(surplusAmount - deficitAmount)
+                receiptInfo.totalAmount = surplusAmount - deficitAmount
             }
         })
 
@@ -418,6 +471,7 @@ class CalculationFragment : Fragment() {
                 }
                 txtDeficitAmount.text = DecimalFormat("###,###,###").format(deficitAmount)
                 txtTotalAmount.text = DecimalFormat("###,###,###").format(surplusAmount - deficitAmount)
+                receiptInfo.totalAmount = surplusAmount - deficitAmount
             }
         })
 
@@ -457,15 +511,15 @@ class CalculationFragment : Fragment() {
             for (player in receiptInfo.players){
                 if (player.gameSurplus) pnSurplusList.add(player)
                 else pnDeficitList.add(player)
-                rcyGameSurplusPlayer.apply {
-                    layoutManager = GridLayoutManager(mainActivity, 3)
-                    adapter = playerWMSurplusAdapter
-                }
-                rcyGameDeficitPlayer.apply {
-                    layoutManager = GridLayoutManager(mainActivity, 3)
-                    adapter = playerWMDeficitAdapter
-                }
 
+            }
+            rcyGameSurplusPlayer.apply {
+                layoutManager = GridLayoutManager(mainActivity, 3)
+                adapter = playerWMSurplusAdapter
+            }
+            rcyGameDeficitPlayer.apply {
+                layoutManager = GridLayoutManager(mainActivity, 3)
+                adapter = playerWMDeficitAdapter
             }
 
         }
@@ -488,7 +542,20 @@ class CalculationFragment : Fragment() {
                 }.show()
         }
 
+        receiptInfo.setOnUpdatePListener(object : ReceiptInfo.UpdatePListener{
+            @SuppressLint("NotifyDataSetChanged")
+            override fun onUpdateP() {
+                pnSurplusList.clear()
+                pnDeficitList.clear()
+                for (player in receiptInfo.players){
+                    if (player.gameSurplus) pnSurplusList.add(player)
+                    else pnDeficitList.add(player)
 
+                }
+                playerWMSurplusAdapter.notifyDataSetChanged()
+                playerWMDeficitAdapter.notifyDataSetChanged()
+            }
+        })
 
         val imgBtnGameDelete = newGameReceipt.findViewById<ImageButton>(R.id.imgBtn_game_delete)
         imgBtnGameDelete.setOnClickListener {
