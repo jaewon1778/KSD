@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center|start"
+    android:orientation="horizontal"
+    android:layout_marginBottom="5dp"
+    >
+    <TextView
+        android:id="@+id/txt_cal_res_one"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/ex_name"
+        android:background="@drawable/bg_player_name"
+        style="@style/style_playerName_cal_result"
+        />
+
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/baseline_arrow_right_alt_24"
+        />
+
+    <TextView
+        android:id="@+id/txt_cal_res_other"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/ex_name"
+        android:background="@drawable/bg_player_name"
+        style="@style/style_playerName_cal_result"
+        />
+
+    <TextView
+        android:id="@+id/txt_cal_res_amount"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="@string/ex_money"
+        style="@style/style_cal_result.amount"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/calculation_result_unit"
+        style="@style/style_cal_result.unit"
+        />
+
+
+</LinearLayout>
+

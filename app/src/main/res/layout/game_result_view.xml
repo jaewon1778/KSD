@@ -39,8 +39,11 @@
         <TextView
             android:id="@+id/txt_game_total_amount"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="right"
+            android:layout_height="match_parent"
+            android:layout_marginStart="3dp"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="3dp"
+            android:layout_marginEnd="1dp"
             android:text="@string/zero"
             style="@style/style_receipt_unit"
             tools:ignore="RtlHardcoded" />
