@@ -18,10 +18,10 @@ class DialogAssignPlayer(context: Context) {
         dialog.setCanceledOnTouchOutside(true)
 
         val rcyDapPlayer = dialog.findViewById<RecyclerView>(R.id.rcy_dap_player)
-        val playerNameAdapter = CalculationViewModel.PlayerNameAdapter()
+        val playerNameAdapter = PlayerNameAdapter()
         playerNameAdapter.pnList = pnActiveList
         playerNameAdapter.type = 2
-        rcyDapPlayer.addItemDecoration(CalculationViewModel.PNRecyclerViewDecoration(10))
+        rcyDapPlayer.addItemDecoration(CalculationFragment.PNRecyclerViewDecoration(10))
         rcyDapPlayer.apply {
             layoutManager = GridLayoutManager(context, 5)
             adapter = playerNameAdapter

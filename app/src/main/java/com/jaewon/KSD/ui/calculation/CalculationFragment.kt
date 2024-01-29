@@ -3,6 +3,7 @@ package com.jaewon.KSD.ui.calculation
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
+import android.graphics.Rect
 import android.icu.text.DecimalFormat
 import android.os.Bundle
 import android.text.Editable
@@ -23,11 +24,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.jaewon.KSD.MainActivity
 import com.jaewon.KSD.R
-import com.jaewon.KSD.data.Group
 import com.jaewon.KSD.data.Player
 import com.jaewon.KSD.data.ReceiptInfo
 import com.jaewon.KSD.databinding.FragmentCalculationBinding
-import kotlin.math.abs
 
 class CalculationFragment : Fragment() {
 
@@ -57,9 +56,9 @@ class CalculationFragment : Fragment() {
         val root: View = binding.root
 
         val rcyPlayerName: RecyclerView = binding.rcyPlayerName
-        val playerNameAdapter = CalculationViewModel.PlayerNameAdapter()
+        val playerNameAdapter = PlayerNameAdapter()
         playerNameAdapter.pnList = calculationViewModel.pnAllList
-        playerNameAdapter.setOnActivePChangeListener(object : CalculationViewModel.PlayerNameAdapter.ActivePChangeListener{
+        playerNameAdapter.setOnActivePChangeListener(object : PlayerNameAdapter.ActivePChangeListener{
             override fun onActivePChanged(player: Player) {
                 for (receiptInfo in calculationViewModel.receiptInfoList){
                     receiptInfo.updatePlayers(calculationViewModel.getActivePNList(), player.active)
@@ -69,7 +68,7 @@ class CalculationFragment : Fragment() {
             }
         })
 
-        rcyPlayerName.addItemDecoration(CalculationViewModel.PNRecyclerViewDecoration(20))
+        rcyPlayerName.addItemDecoration(PNRecyclerViewDecoration(20))
         rcyPlayerName.apply {
             layoutManager = LinearLayoutManager(mainActivity,LinearLayoutManager.HORIZONTAL,false)
             adapter = playerNameAdapter
@@ -83,6 +82,7 @@ class CalculationFragment : Fragment() {
         }
 
         binding.btnCalReceipt.setOnClickListener {
+            binding.llResultNote.removeAllViews()
             // 영수증 확인 함수
             if (calculationViewModel.receiptInfoList.size == 0) {
                 Toast.makeText(mainActivity,"계산할 내역이 없습니다.",Toast.LENGTH_SHORT).show()
@@ -93,18 +93,18 @@ class CalculationFragment : Fragment() {
             var solution = ""
             for ((index,receipt) in calculationViewModel.receiptInfoList.withIndex()) {
                 when(receipt.isReadyForCal()){
-                    0 -> continue
-                    1 -> {
+                    ReceiptInfo.OK -> continue
+                    ReceiptInfo.PROBLEM_OF_NBB_TOTAL -> {
                         receiptName = binding.llReceiptNote[index].findViewById<TextView>(R.id.txt_receipt_kind).text.trim() as String
                         solution = "의 총액을 입력해주세요."
                         break
                     }
-                    2 -> {
+                    ReceiptInfo.PROBLEM_OF_NBB_PAY -> {
                         receiptName = binding.llReceiptNote[index].findViewById<TextView>(R.id.txt_receipt_kind).text.trim() as String
                         solution = "을 계산한 사람을 선택해주세요."
                         break
                     }
-                    3 -> {
+                    ReceiptInfo.PROBLEM_OF_GAME_ZERO -> {
                         receiptName = binding.llReceiptNote[index].findViewById<TextView>(R.id.txt_game_kind).text.trim() as String
                         solution = "의 총합을 0원으로 맞춰주세요."
                         break
@@ -117,254 +117,47 @@ class CalculationFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            val calculatedPlayerList = calculationViewModel.getCalculatedActivePNList()
+            calculationViewModel.calculationAll()
+            updateCalResult(calculationViewModel.calResultInfoList)
+            //calResultInfoList를 통해서 상세 결과도 만들어야할듯?
 
-//            // 잘 나눠졌는지 확인
-//            for (p in calculatedPlayerList){
-//                Toast.makeText(mainActivity,p.name + p.amount.toString(),Toast.LENGTH_SHORT).show()
-//            }
-
-            // 무리 나누기 함수
-            // 송금하기 함수
-            // 표시하기 함수
-
-            val surplusPList = mutableListOf<Player>()
-            val deficitPList = mutableListOf<Player>()
-            val zeroPList = mutableListOf<Player>()
-            val allPList = mutableListOf<MutableList<Player>>(deficitPList,zeroPList,surplusPList)
-
-            for (player in calculatedPlayerList){
-                if (player.amount == 0) zeroPList.add(player)
-                else if (player.amount > 0 ) surplusPList.add(player)
-                else deficitPList.add(player)
-            }
-
-            val surplusGroupList: MutableList<Group> = list2Group(surplusPList, 1)
-            val deficitGroupList: MutableList<Group> = list2Group(deficitPList, -1)
-            val zeroGroupList: MutableList<Group> = list2Group(zeroPList, 0)
-
-            val dividedGroupList = divGroup(surplusGroupList, deficitGroupList)
-//            val allRemitList = mutableListOf<Triple<Pair<Int,Int>,Pair<Int,Int>,Int>>()
-            val calResultInfoList = mutableListOf<Triple<String,String,Int>>()
-            for (divG in dividedGroupList) {
-//                allRemitList += remitWho(divG)
-                var one : String
-                var other : String
-                var amount : Int
-                for (remitInfo in remitWho(divG)){
-                    if (remitInfo.first.first == 0) {
-                        for (defP in divG.deficitIndexMoneyList){
-                            one = allPList[0][defP.first].name
-                            other = allPList[remitInfo.second.first+1][remitInfo.second.second].name
-                            amount = -defP.second
-                            calResultInfoList.add(Triple(one,other,amount))
-                        }
-                        break
-                    }
-                    if (remitInfo.second.first == 0){
-                        for (surP in divG.surplusIndexMoneyList){
-                            one = allPList[remitInfo.first.first+1][remitInfo.first.second].name
-                            other = allPList[1][surP.first].name
-                            amount = surP.second
-                            calResultInfoList.add(Triple(one,other,amount))
-                        }
-                        break
-                    }
-
-                    one = allPList[remitInfo.first.first+1][remitInfo.first.second].name
-                    other = allPList[remitInfo.second.first+1][remitInfo.second.second].name
-                    amount = remitInfo.third
-                    calResultInfoList.add(Triple(one,other,amount))
-                }
-            }
-            updateCalResult(calResultInfoList)
-
-
+            Toast.makeText(mainActivity,"qq",Toast.LENGTH_SHORT).show()
         }
 
         /// 실험용
         binding.btnTest.setOnClickListener {
-//            val newReceipt : View = if (calculationViewModel.receiptInfoList[0].typeOfReceipt == 1){
-//                createNBBView(calculationViewModel.receiptInfoList[0])
-//            } else {
-//                createGameView(calculationViewModel.receiptInfoList[0])
-//            }
-//            binding.llReceiptNote.addView(newReceipt,-1)
-
-//            addCalResult()
         }
         /// 실험용
+
+        keepViews()
         return root
     }
 
-    private fun remitWho(dividedGroup:Group):MutableList<Triple<Pair<Int,Int>,Pair<Int,Int>,Int>>{
-        val remitList: MutableList<Triple<Pair<Int,Int>,Pair<Int,Int>,Int>> = mutableListOf() //0이 1에게 2만큼 보내세요
-
-        if (dividedGroup.surplusIndexMoneyList.size == 1){
-            remitList.add(Triple(Pair(0,0), Pair(1,dividedGroup.surplusIndexMoneyList[0].first),0))
-            return remitList
-        }
-        if (dividedGroup.deficitIndexMoneyList.size == 1){
-            remitList.add(Triple(Pair(-1,dividedGroup.deficitIndexMoneyList[0].first), Pair(0,0),0))
-            return remitList
-        }
-
-
-        dividedGroup.sortList()
-        val surplusArray: Array<Pair<Int,Int>> = dividedGroup.surplusIndexMoneyList.toTypedArray()
-        val surplusLastIndex: Int = surplusArray.size - 1
-        for ((index,deficitP) in dividedGroup.deficitIndexMoneyList.withIndex()){
-            if (index == dividedGroup.deficitIndexMoneyList.size - 1){
-                surplusArray[surplusLastIndex] = Pair(surplusArray[surplusLastIndex].first, surplusArray[surplusLastIndex].second + deficitP.second)
-                remitList.add(Triple(Pair(-1,deficitP.first), Pair(1,surplusArray[surplusLastIndex].first),deficitP.second))
-                break
-            }
-            val sIndex = if (index < surplusLastIndex) index else index - surplusLastIndex + 1
-            surplusArray[sIndex] = Pair(surplusArray[sIndex].first, surplusArray[sIndex].second + deficitP.second)
-            remitList.add(Triple(Pair(-1,deficitP.first), Pair(1,surplusArray[sIndex].first),deficitP.second))
-
-        }
-        var firstMinus: Int? = surplusArray.indices.find { surplusArray[it].second < 0 }
-        for (overP in surplusArray){
-            if (overP.second == 0) break
-            surplusArray[firstMinus!!] = Pair(surplusArray[firstMinus].first, surplusArray[firstMinus].second + overP.second)
-            remitList.add(Triple(Pair(1,overP.first), Pair(1,surplusArray[firstMinus].first), overP.second))
-            if (surplusArray[firstMinus].second + overP.second >= 0) firstMinus++
-        }
-        return remitList
-
-    }
-
-    fun list2Group(playerList:MutableList<Player>, groupType: Int) : MutableList<Group>{
-        val newGroupList = mutableListOf<Group>()
-        if (groupType == 1){
-            for ((index,player) in playerList.withIndex()){
-                val newG = Group()
-                newG.surplusIndexMoneyList.add(Pair(index,player.amount))
-                newG.totalAmount = player.amount
-                newGroupList.add(newG)
+    private fun keepViews(){
+        for(receiptInfo in calculationViewModel.receiptInfoList){
+            when(receiptInfo.typeOfReceipt){
+                ReceiptInfo.NBB_TYPE -> binding.llReceiptNote.addView(createNBBView(receiptInfo),-1)
+                ReceiptInfo.GAME_TYPE -> binding.llReceiptNote.addView(createGameView(receiptInfo),-1)
             }
         }
-        else {
-            for ((index,player) in playerList.withIndex()){
-                val newG = Group()
-                newG.deficitIndexMoneyList.add(Pair(index,player.amount))
-                newG.totalAmount = player.amount
-                newGroupList.add(newG)
-            }
+        if (calculationViewModel.calResultInfoList.size != 0){
+            updateCalResult(calculationViewModel.calResultInfoList)
         }
-        return newGroupList
-    }
-
-    private fun divGroup(surplusGroupList: MutableList<Group>, deficitGroupList: MutableList<Group>) : MutableList<Group>{
-        val dividedGroupList = mutableListOf<Group>()
-
-        val comparisonGroupList : MutableList<Group>
-        val basicGroupList : MutableList<Group>
-        val comparisonValue : Int
-        if (surplusGroupList.size > deficitGroupList.size) {
-            comparisonValue = -1
-            comparisonGroupList = makeAllCombinationGroup(deficitGroupList, deficitGroupList.size-1)
-            basicGroupList = makeAllCombinationGroup(surplusGroupList, surplusGroupList.size/2)
-        } else {
-            comparisonValue = 1
-            comparisonGroupList = makeAllCombinationGroup(surplusGroupList, surplusGroupList.size-1)
-            basicGroupList = makeAllCombinationGroup(deficitGroupList, deficitGroupList.size/2)
-        }
-//        comparisonGroupList.sortBy { it.totalAmount }
-//        basicGroupList.sortBy { it.totalAmount }
-
-        var marker = false
-        var basIndex = 0
-        var comIndex = 0
-
-        while (basIndex < basicGroupList.size){
-            comIndex = 0
-            while (comIndex < comparisonGroupList.size){
-                val isGroup = comparisonGroupList[comIndex]+basicGroupList[basIndex]
-                if (isGroup.totalAmount == 0){
-                    dividedGroupList.add(isGroup)
-                    marker = true
-                    break
-                }
-                if (isGroup.totalAmount*comparisonValue > 0){
-                    break
-                }
-                comIndex++
-            }
-
-            basIndex++
-
-            if (marker){
-                val sGL : MutableList<Group>
-                val dGL : MutableList<Group>
-                if (comparisonValue == 1){
-                    sGL = comparisonGroupList
-                    dGL = basicGroupList
-                }
-                else {
-                    dGL = comparisonGroupList
-                    sGL = basicGroupList
-                }
-                for (surplusPairOfIM in dividedGroupList.last().surplusIndexMoneyList){
-                    sGL.removeIf{it.surplusIndexMoneyList.contains(surplusPairOfIM)}
-                    surplusGroupList.removeIf{it.surplusIndexMoneyList.contains(surplusPairOfIM)}
-                }
-                for (deficitPairOfIM in dividedGroupList.last().deficitIndexMoneyList){
-                    dGL.removeIf{it.deficitIndexMoneyList.contains(deficitPairOfIM)}
-                    deficitGroupList.removeIf{it.deficitIndexMoneyList.contains(deficitPairOfIM)}
-                }
-                basIndex = 0
-                marker = false
-            }
-
-
-        }
-//        Toast.makeText(mainActivity,"그룹 수 : "+dividedGroupList.size, Toast.LENGTH_SHORT).show()
-        if (basicGroupList.size != 0){
-            var remainedGroup = Group()
-            for (remainedG in surplusGroupList + deficitGroupList){
-               remainedGroup += remainedG
-            }
-            dividedGroupList.add(remainedGroup)
-        }
-        return dividedGroupList
-    }
-
-    private fun makeAllCombinationGroup(groupList: MutableList<Group>, maxSize: Int):MutableList<Group>{
-
-        val newGroupList : MutableList<Group> = mutableListOf()
-        if (groupList.size == 1) return groupList
-
-        newGroupList.add(Group())
-        for ( group in groupList){
-            val size = newGroupList.size
-            for (indexOfSubset in 0 until size){
-                if (newGroupList[indexOfSubset].maxSize() == maxSize) continue
-                newGroupList.add(newGroupList[indexOfSubset]+group)
-            }
-        }
-
-        newGroupList.removeAt(0)
-        newGroupList.sortBy { abs(it.totalAmount) }
-        return newGroupList
-
     }
 
     private fun updateCalResult(calResultInfoList:MutableList<Triple<String,String,Int>>){
-        binding.llResultNote.removeAllViews()
+
         val newCalResView = createCalResView(calResultInfoList)
 
         binding.llResultNote.addView(newCalResView)
     }
 
-    @SuppressLint("MissingInflatedId")
+    @SuppressLint("MissingInflatedId", "InflateParams")
     //결과 View 생성
-    fun createCalResView(calResultInfoList:MutableList<Triple<String,String,Int>>):View{
+    private fun createCalResView(calResultInfoList:MutableList<Triple<String,String,Int>>):View{
         val newCalResView = LayoutInflater.from(mainActivity).inflate(R.layout.calculation_result_view,null,false)
-
         val rcyCalRes = newCalResView.findViewById<RecyclerView>(R.id.rcy_calculation_result)
-        val calResultAdapter = CalculationViewModel.CalResultAdapter()
+        val calResultAdapter = CalResultAdapter()
         calResultAdapter.calResultInfoList = calResultInfoList
         rcyCalRes.apply {
             layoutManager = LinearLayoutManager(mainActivity)
@@ -377,7 +170,7 @@ class CalculationFragment : Fragment() {
     @SuppressLint("InflateParams")
     private fun addNBBReceipt(pnAllList:MutableList<Player>) {
 
-        val newReceiptInfo = ReceiptInfo(pnAllList,1)
+        val newReceiptInfo = ReceiptInfo(pnAllList,ReceiptInfo.NBB_TYPE)
         calculationViewModel.receiptInfoList.add(newReceiptInfo)
         val newNBBReceipt = createNBBView(newReceiptInfo)
 
@@ -387,10 +180,10 @@ class CalculationFragment : Fragment() {
     private fun createNBBView(receiptInfo:ReceiptInfo):View{
         val newNBBReceipt = LayoutInflater.from(mainActivity).inflate(R.layout.receipt_view,null,false)
         val rcyReceiptPlayer = newNBBReceipt.findViewById<RecyclerView>(R.id.rcy_receipt_player)
-        val playerNameAdapter = CalculationViewModel.PlayerNameAdapter()
+        val playerNameAdapter = PlayerNameAdapter()
         playerNameAdapter.pnList = receiptInfo.players
         playerNameAdapter.type = 1
-        rcyReceiptPlayer.addItemDecoration(CalculationViewModel.PNRecyclerViewDecoration(13))
+        rcyReceiptPlayer.addItemDecoration(PNRecyclerViewDecoration(13))
         rcyReceiptPlayer.apply {
             layoutManager = GridLayoutManager(mainActivity,7)
             adapter = playerNameAdapter
@@ -447,7 +240,7 @@ class CalculationFragment : Fragment() {
             }
         })
 
-        playerNameAdapter.setOnPNBBChangeListener(object : CalculationViewModel.PlayerNameAdapter.PNBBChangeListener{
+        playerNameAdapter.setOnPNBBChangeListener(object : PlayerNameAdapter.PNBBChangeListener{
             override fun onPNBBChanged() {
                 txtReceiptForOne.text = DecimalFormat("인당 ###,###,###원").format(receiptInfo.getAmountForOne())
             }
@@ -472,7 +265,7 @@ class CalculationFragment : Fragment() {
     @SuppressLint("InflateParams")
     private fun addGameResult(pnAllList:MutableList<Player>) {
 
-        val newReceiptInfo = ReceiptInfo(pnAllList,2)
+        val newReceiptInfo = ReceiptInfo(pnAllList,ReceiptInfo.GAME_TYPE)
         calculationViewModel.receiptInfoList.add(newReceiptInfo)
         val newGameReceipt = createGameView(newReceiptInfo)
 
@@ -487,12 +280,12 @@ class CalculationFragment : Fragment() {
         val pnDeficitList = mutableListOf<Player>()
         val rcyGameSurplusPlayer = newGameReceipt.findViewById<RecyclerView>(R.id.rcy_game_surplus_player)
         val rcyGameDeficitPlayer = newGameReceipt.findViewById<RecyclerView>(R.id.rcy_game_deficit_player)
-        val playerWMSurplusAdapter = CalculationViewModel.PlayerWithMoneyAdapter()
-        val playerWMDeficitAdapter = CalculationViewModel.PlayerWithMoneyAdapter()
+        val playerWMSurplusAdapter = PlayerWithMoneyAdapter()
+        val playerWMDeficitAdapter = PlayerWithMoneyAdapter()
         playerWMSurplusAdapter.pnList = pnSurplusList
         playerWMDeficitAdapter.pnList = pnDeficitList
-        rcyGameSurplusPlayer.addItemDecoration(CalculationViewModel.PNRecyclerViewDecoration(5))
-        rcyGameDeficitPlayer.addItemDecoration(CalculationViewModel.PNRecyclerViewDecoration(5))
+        rcyGameSurplusPlayer.addItemDecoration(PNRecyclerViewDecoration(5))
+        rcyGameDeficitPlayer.addItemDecoration(PNRecyclerViewDecoration(5))
 
 
         val txtTotalAmount = newGameReceipt.findViewById<TextView>(R.id.txt_game_total_amount)
@@ -501,7 +294,7 @@ class CalculationFragment : Fragment() {
         var surplusAmount = 0
         var deficitAmount = 0
 
-        playerWMSurplusAdapter.setOnPMChangeListener(object : CalculationViewModel.PlayerWithMoneyAdapter.PMChangeListener{
+        playerWMSurplusAdapter.setOnPMChangeListener(object : PlayerWithMoneyAdapter.PMChangeListener{
             override fun onPMChanged() {
                 surplusAmount = 0
                 for (player in pnSurplusList){
@@ -513,7 +306,7 @@ class CalculationFragment : Fragment() {
             }
         })
 
-        playerWMDeficitAdapter.setOnPMChangeListener(object : CalculationViewModel.PlayerWithMoneyAdapter.PMChangeListener{
+        playerWMDeficitAdapter.setOnPMChangeListener(object : PlayerWithMoneyAdapter.PMChangeListener{
             override fun onPMChanged() {
                 deficitAmount = 0
                 for (player in pnDeficitList){
@@ -616,7 +409,18 @@ class CalculationFragment : Fragment() {
         return newGameReceipt
     }
 
-
+    class PNRecyclerViewDecoration(val space: Int) : RecyclerView.ItemDecoration() {
+        override fun getItemOffsets(
+            outRect: Rect,
+            view: View,
+            parent: RecyclerView,
+            state: RecyclerView.State
+        ) {
+            super.getItemOffsets(outRect, view, parent, state)
+            outRect.left = space
+            outRect.bottom = space
+        }
+    }
 
 
     override fun onDestroyView() {

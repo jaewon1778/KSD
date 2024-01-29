@@ -10,14 +10,14 @@ data class ReceiptInfo(
 ) {
     fun isReadyForCal(): Int{
         if (typeOfReceipt == 1 ){
-            if (totalAmount == 0) return 1
+            if (totalAmount == 0) return PROBLEM_OF_NBB_TOTAL
             for (player in players){
-                if (player.statePay) return 0
+                if (player.statePay) return OK
             }
-            return 2
+            return PROBLEM_OF_NBB_PAY
         }
-        if (typeOfReceipt == 2 && totalAmount != 0) return 3
-        return 0
+        if (typeOfReceipt == 2 && totalAmount != 0) return PROBLEM_OF_GAME_ZERO
+        return OK
     }
 
     fun updatePlayers(newPlayers : MutableList<Player>, isAdd : Boolean){
@@ -90,5 +90,14 @@ data class ReceiptInfo(
             2 -> allocateGameMoney(pnList)
         }
 //        return mutableListOf()
+    }
+
+    companion object {
+        const val NBB_TYPE: Int = 1
+        const val GAME_TYPE: Int = 2
+        const val OK: Int = 0
+        const val PROBLEM_OF_NBB_TOTAL: Int = 1
+        const val PROBLEM_OF_NBB_PAY: Int = 2
+        const val PROBLEM_OF_GAME_ZERO: Int = 3
     }
 }
