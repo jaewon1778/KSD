@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/ll_wholeCalculationResult"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -26,6 +24,35 @@
         android:orientation="vertical"
         android:layout_marginBottom="10dp"
         android:overScrollMode="never"
+        />
+<!--    <LinearLayout-->
+<!--        android:id="@+id/ll_result_detail"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:orientation="vertical"-->
+<!--        >-->
+        <include
+            layout="@layout/calculation_result_detail"
+            android:id="@+id/incl_cal_res_detail"
+            android:visibility="gone"
+            />
+<!--    </LinearLayout>-->
+
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/black"
+        />
+
+    <ImageButton
+        android:id="@+id/imgBtn_cal_res_show_detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@drawable/baseline_expand_more_24"
+        android:background="@color/transparent"
+        android:scaleType="centerInside"
+
         />
 
 

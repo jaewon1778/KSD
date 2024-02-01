@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center|start"
+    android:orientation="horizontal"
+    android:layout_marginBottom="5dp"
+    >
+    <TextView
+        android:id="@+id/txt_cal_res_detail_line_head"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/ex_name"
+        style="@style/style_cal_result_detail"
+        />
+
+
+    <TextView
+        android:id="@+id/txt_cal_res_detail_line_amount"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="@string/ex_money"
+        style="@style/style_cal_result_detail.amount"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/unit"
+        style="@style/style_cal_result_detail.unit"
+        />
+
+
+</LinearLayout>
+

@@ -14,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.get
@@ -121,7 +122,7 @@ class CalculationFragment : Fragment() {
             updateCalResult(calculationViewModel.calResultInfoList)
             //calResultInfoList를 통해서 상세 결과도 만들어야할듯?
 
-            Toast.makeText(mainActivity,"qq",Toast.LENGTH_SHORT).show()
+//            Toast.makeText(mainActivity,"qq",Toast.LENGTH_SHORT).show()
         }
 
         /// 실험용
@@ -163,6 +164,67 @@ class CalculationFragment : Fragment() {
             layoutManager = LinearLayoutManager(mainActivity)
             adapter = calResultAdapter
         }
+        val inclDetail = newCalResView.findViewById<LinearLayout>(R.id.incl_cal_res_detail)
+        val imgBtnShowDetail = newCalResView.findViewById<ImageButton>(R.id.imgBtn_cal_res_show_detail)
+        imgBtnShowDetail.setOnClickListener {
+            if (inclDetail.visibility == View.GONE) {
+                inclDetail.visibility = View.VISIBLE
+            }
+            else {
+                inclDetail.visibility = View.GONE
+            }
+        }
+        val rcyDetailPlayer = inclDetail.findViewById<RecyclerView>(R.id.rcy_calculation_result_detail_player)
+        val detailPlayerAdapter = PlayerNameAdapter()
+        val rcyDetailDetails = inclDetail.findViewById<RecyclerView>(R.id.rcy_calculation_result_detail_details)
+        val detailDetailsAdapter = DetailAdapter()
+        val txtDetailsAmount = inclDetail.findViewById<TextView>(R.id.txt_cal_res_detail_details_amount)
+        val rcyDetailCalculation = inclDetail.findViewById<RecyclerView>(R.id.rcy_calculation_result_detail_calculation)
+        val detailCalculationAdapter = DetailAdapter()
+        val txtCalculationAmount = inclDetail.findViewById<TextView>(R.id.txt_cal_res_detail_calculation_amount)
+
+        val detailPlayerList = calculationViewModel.getActivePNList()
+        detailPlayerList[0].statePay = true
+
+        detailPlayerAdapter.pnList = detailPlayerList
+        detailPlayerAdapter.type = 3
+        rcyDetailPlayer.addItemDecoration(PNRecyclerViewDecoration(13))
+
+        detailPlayerAdapter.setOnDetailPSelectListener(object : PlayerNameAdapter.DetailPSelectListener{
+            @SuppressLint("NotifyDataSetChanged")
+            override fun onDetailPSelected(player: Player) {
+                detailDetailsAdapter.detailInfoList = calculationViewModel.detailDetailsMap[player.name]!!
+                detailCalculationAdapter.detailInfoList = calculationViewModel.detailCalculationMap[player.name]!!
+                detailDetailsAdapter.notifyDataSetChanged()
+                detailCalculationAdapter.notifyDataSetChanged()
+
+                txtDetailsAmount.text = calculationViewModel.detailDetailsAmountMap[player.name].toString()
+                txtCalculationAmount.text = calculationViewModel.detailCalculationAmountMap[player.name].toString()
+            }
+        })
+
+
+        rcyDetailPlayer.apply {
+            layoutManager = LinearLayoutManager(mainActivity,LinearLayoutManager.HORIZONTAL,false)
+            adapter = detailPlayerAdapter
+        }
+
+
+        detailDetailsAdapter.detailInfoList = calculationViewModel.detailDetailsMap[detailPlayerList[0].name]!!
+
+        rcyDetailDetails.apply {
+            layoutManager = LinearLayoutManager(mainActivity)
+            adapter = detailDetailsAdapter
+        }
+
+        detailCalculationAdapter.detailInfoList = calculationViewModel.detailCalculationMap[detailPlayerList[0].name]!!
+        rcyDetailCalculation.apply {
+            layoutManager = LinearLayoutManager(mainActivity)
+            adapter = detailCalculationAdapter
+        }
+
+        txtDetailsAmount.text = calculationViewModel.detailDetailsAmountMap[detailPlayerList[0].name].toString()
+        txtCalculationAmount.text = calculationViewModel.detailCalculationAmountMap[detailPlayerList[0].name].toString()
 
         return newCalResView
     }
@@ -177,6 +239,7 @@ class CalculationFragment : Fragment() {
         binding.llReceiptNote.addView(newNBBReceipt,-1)
     }
 
+    @SuppressLint("InflateParams")
     private fun createNBBView(receiptInfo:ReceiptInfo):View{
         val newNBBReceipt = LayoutInflater.from(mainActivity).inflate(R.layout.receipt_view,null,false)
         val rcyReceiptPlayer = newNBBReceipt.findViewById<RecyclerView>(R.id.rcy_receipt_player)
@@ -202,7 +265,7 @@ class CalculationFragment : Fragment() {
                 resources.getString(R.string.receipt_nbb_4_NBB))
             AlertDialog.Builder(mainActivity)
                 .setTitle("N빵 종류를 선택하세요").setItems(nbbOption) {
-                        dialog, whitch ->
+                        _, whitch ->
                     receiptInfo.subtypeOfReceipt = nbbOption[whitch]
                     txtReceiptKind.text = receiptInfo.subtypeOfReceipt
                 }.show()
@@ -228,7 +291,7 @@ class CalculationFragment : Fragment() {
                     pointNumInt = 0
                     pointNumStr = ""
                 }
-                if (!s.toString().equals(pointNumStr)) {
+                if (s.toString() != pointNumStr) {
                     pointNumInt = Integer.parseInt(s.toString().replace(",", ""))
                     pointNumStr = DecimalFormat("###,###,###").format(pointNumInt)
                     edtReceiptAmount.setText(pointNumStr)
@@ -379,7 +442,7 @@ class CalculationFragment : Fragment() {
 
             AlertDialog.Builder(mainActivity)
                 .setTitle("게임 종류를 선택하세요").setItems(gameOption) {
-                        dialog, whitch ->
+                        _, whitch ->
                     receiptInfo.subtypeOfReceipt = gameOption[whitch]
                     txtGameKind.text = receiptInfo.subtypeOfReceipt
                 }.show()
@@ -409,7 +472,7 @@ class CalculationFragment : Fragment() {
         return newGameReceipt
     }
 
-    class PNRecyclerViewDecoration(val space: Int) : RecyclerView.ItemDecoration() {
+    class PNRecyclerViewDecoration(private val space: Int) : RecyclerView.ItemDecoration() {
         override fun getItemOffsets(
             outRect: Rect,
             view: View,
@@ -417,7 +480,8 @@ class CalculationFragment : Fragment() {
             state: RecyclerView.State
         ) {
             super.getItemOffsets(outRect, view, parent, state)
-            outRect.left = space
+            outRect.left = space/2
+            outRect.right = space/2
             outRect.bottom = space
         }
     }

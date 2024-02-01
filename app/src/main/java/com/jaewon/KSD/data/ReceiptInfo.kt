@@ -54,40 +54,48 @@ data class ReceiptInfo(
         }
         return num
     }
-    fun getPlayerToPay():Player{
-        var player2pay : Player = Player("__fail")
-        for (player in players){
-            if (player.statePay) player2pay = player
-        }
-        return player2pay
-    }
+//    fun getPlayerToPay():Player{
+//        var player2pay : Player = Player("__fail")
+//        for (player in players){
+//            if (player.statePay) player2pay = player
+//        }
+//        return player2pay
+//    }
     fun getAmountForOne(): Int {
         if (getNumOfStateOnPlayers() == 0) return 0
         return (totalAmount / (getNumOfStateOnPlayers() + 0.0)).roundToInt()
     }
-    fun allocateTotalMoney(pnList : MutableList<Player>){
+    private fun allocateTotalMoney(pnList : MutableList<Player>, detailDetailsMap: MutableMap<String,MutableList<Pair<String,Int>>>){
         val amountForOne = getAmountForOne()
         for ((index,player) in players.withIndex()){
             if (!player.stateOn) continue
             if (player.statePay) {
+                detailDetailsMap[player.name]?.add(Pair(subtypeOfReceipt,amountForOne*(getNumOfStateOnPlayers()-1)))
                 pnList[index].amount += amountForOne*(getNumOfStateOnPlayers()-1)
                 continue
             }
+            detailDetailsMap[player.name]?.add(Pair(subtypeOfReceipt,-amountForOne))
             pnList[index].amount -= amountForOne
         }
 //        return players
     }
-    fun allocateGameMoney(pnList : MutableList<Player>){
+    private fun allocateGameMoney(pnList : MutableList<Player>, detailDetailsMap: MutableMap<String,MutableList<Pair<String,Int>>>){
         for ((index,player) in players.withIndex()){
-            if (player.gameSurplus) pnList[index].amount += player.amount
-            else pnList[index].amount -= player.amount
+            if (player.gameSurplus) {
+                detailDetailsMap[player.name]?.add(Pair(subtypeOfReceipt,player.amount))
+                pnList[index].amount += player.amount
+            }
+            else {
+                detailDetailsMap[player.name]?.add(Pair(subtypeOfReceipt,-player.amount))
+                pnList[index].amount -= player.amount
+            }
         }
 //        return players
     }
-    fun calculateReceipt(pnList : MutableList<Player>){
+    fun calculateReceipt(pnList : MutableList<Player>, detailDetailsMap: MutableMap<String,MutableList<Pair<String,Int>>>){
         when(typeOfReceipt){
-            1 -> allocateTotalMoney(pnList)
-            2 -> allocateGameMoney(pnList)
+            1 -> allocateTotalMoney(pnList, detailDetailsMap)
+            2 -> allocateGameMoney(pnList, detailDetailsMap)
         }
 //        return mutableListOf()
     }

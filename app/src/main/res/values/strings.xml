@@ -35,7 +35,10 @@
     <string name="calculation_result_unit">원 송금</string>
     <string name="ex_name">고</string>
     <string name="ex_money">12,345</string>
+    <string name="ex_money_unit">12,345원</string>
     <string name="ex_long">안녕하세요 저는 고재원이구요 고재원입니다. 감사합니다. 제가 여러분들을 모은 이유는 다름이 아니라 다름이 아닙니다.</string>
+    <string name="details">세부 내역</string>
+    <string name="calculation">정산</string>
 
 
 

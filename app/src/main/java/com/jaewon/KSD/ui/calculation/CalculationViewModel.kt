@@ -1,9 +1,6 @@
 package com.jaewon.KSD.ui.calculation
 
-import android.graphics.Rect
-import android.view.View
 import androidx.lifecycle.ViewModel
-import androidx.recyclerview.widget.RecyclerView
 import com.jaewon.KSD.data.Group
 import com.jaewon.KSD.data.Player
 import com.jaewon.KSD.data.ReceiptInfo
@@ -15,6 +12,10 @@ class CalculationViewModel : ViewModel() {
     val pnAllList = string2PlayerList(nameList)
     val receiptInfoList = mutableListOf<ReceiptInfo>()
     val calResultInfoList = mutableListOf<Triple<String,String,Int>>()
+    val detailDetailsMap = mutableMapOf<String,MutableList<Pair<String,Int>>>()
+    val detailCalculationMap = mutableMapOf<String,MutableList<Pair<String,Int>>>()
+    val detailDetailsAmountMap = mutableMapOf<String,Int>()
+    val detailCalculationAmountMap = mutableMapOf<String,Int>()
 
     fun getActivePNList(): MutableList<Player>{
         val activePNList = mutableListOf<Player>()
@@ -26,10 +27,18 @@ class CalculationViewModel : ViewModel() {
         return activePNList
     }
 
-    fun getCalculatedActivePNList(): MutableList<Player>{
+    private fun getCalculatedActivePNList(): MutableList<Player>{
         val newActivePNList = getActivePNList()
+        detailDetailsMap.clear()
+        detailCalculationMap.clear()
+
+        for (player in newActivePNList){
+            detailDetailsMap[player.name] = mutableListOf()
+            detailCalculationMap[player.name] = mutableListOf()
+        }
+
         for (receipt in receiptInfoList){
-            receipt.calculateReceipt(newActivePNList)
+            receipt.calculateReceipt(newActivePNList, detailDetailsMap)
         }
 
         return newActivePNList
@@ -74,6 +83,8 @@ class CalculationViewModel : ViewModel() {
                         other = allPList[remitInfo.second.first+1][remitInfo.second.second].name
                         amount = -defP.second
                         calResultInfoList.add(Triple(one,other,amount))
+                        detailCalculationMap[one]?.add(Pair(other,-amount))
+                        detailCalculationMap[other]?.add(Pair(one,amount))
                     }
                     break
                 }
@@ -83,6 +94,8 @@ class CalculationViewModel : ViewModel() {
                         other = allPList[2][surP.first].name
                         amount = surP.second
                         calResultInfoList.add(Triple(one,other,amount))
+                        detailCalculationMap[one]?.add(Pair(other,-amount))
+                        detailCalculationMap[other]?.add(Pair(one,amount))
                     }
                     break
                 }
@@ -91,8 +104,26 @@ class CalculationViewModel : ViewModel() {
                 other = allPList[remitInfo.second.first+1][remitInfo.second.second].name
                 amount = remitInfo.third
                 calResultInfoList.add(Triple(one,other,amount))
+                detailCalculationMap[one]?.add(Pair(other,-amount))
+                detailCalculationMap[other]?.add(Pair(one,amount))
             }
         }
+
+        for (detailsLine in detailDetailsMap){
+            var detailsAmount = 0
+            for (lineAmount in detailsLine.value) {
+                detailsAmount += lineAmount.second
+            }
+            detailDetailsAmountMap[detailsLine.key] = detailsAmount
+        }
+        for (calculationLine in detailCalculationMap){
+            var calculationAmount = 0
+            for (lineAmount in calculationLine.value) {
+                calculationAmount += lineAmount.second
+            }
+            detailCalculationAmountMap[calculationLine.key] = calculationAmount
+        }
+
     }
 
     /**
@@ -101,7 +132,7 @@ class CalculationViewModel : ViewModel() {
      * @param dividedGroup 총합이 0인 그룹
      * @return MutableList of Triple{(돈을 보낼 PlayerType, 돈을 보낼 PlayerIndex),(돈을 받을 PlayerType, 돈을 받을 PlayerIndex),Amount}
      */
-    fun remitWho(dividedGroup: Group):MutableList<Triple<Pair<Int,Int>,Pair<Int,Int>,Int>>{
+    private fun remitWho(dividedGroup: Group):MutableList<Triple<Pair<Int,Int>,Pair<Int,Int>,Int>>{
         val remitList: MutableList<Triple<Pair<Int,Int>,Pair<Int,Int>,Int>> = mutableListOf() //0이 1에게 2만큼 보내세요
 
         if (dividedGroup.surplusIndexMoneyList.size == 1){
@@ -135,7 +166,7 @@ class CalculationViewModel : ViewModel() {
             surplusArray[firstPlus!!] = Pair(surplusArray[firstPlus].first, surplusArray[firstPlus].second + overP.second)
             remitList.add(Triple(Pair(1,overP.first), Pair(1,surplusArray[firstPlus].first), -overP.second))
 
-            if (surplusArray[firstPlus].second + overP.second <= 0) firstPlus++
+            if (surplusArray[firstPlus].second <= 0) firstPlus++
 
         }
         return remitList
@@ -148,7 +179,7 @@ class CalculationViewModel : ViewModel() {
      * @param groupType 그룹의 Type을 지정
      * @return MutableList of Group
      */
-    fun list2Group(playerList:MutableList<Player>, groupType: Int) : MutableList<Group>{
+    private fun list2Group(playerList:MutableList<Player>, groupType: Int) : MutableList<Group>{
         val newGroupList = mutableListOf<Group>()
         if (groupType == 1){
             for ((index,player) in playerList.withIndex()){
@@ -176,7 +207,7 @@ class CalculationViewModel : ViewModel() {
      * @param deficitGroupList 돈을 내야하는 Group List
      * @return 총합이 0인 Group List
      */
-    fun divGroup(surplusGroupList: MutableList<Group>, deficitGroupList: MutableList<Group>) : MutableList<Group>{
+    private fun divGroup(surplusGroupList: MutableList<Group>, deficitGroupList: MutableList<Group>) : MutableList<Group>{
         val dividedGroupList = mutableListOf<Group>()
 
         val comparisonGroupList : MutableList<Group>
@@ -196,7 +227,7 @@ class CalculationViewModel : ViewModel() {
 
         var marker = false
         var basIndex = 0
-        var comIndex = 0
+        var comIndex : Int
 
         while (basIndex < basicGroupList.size){
             comIndex = 0
@@ -257,7 +288,7 @@ class CalculationViewModel : ViewModel() {
      * @param maxSize 부분 집합의 최대 크기 제한
      * @return 최대 size가 maxSize인 groupList의 모든 부분 집합 List
      */
-    fun makeAllCombinationGroup(groupList: MutableList<Group>, maxSize: Int):MutableList<Group>{
+    private fun makeAllCombinationGroup(groupList: MutableList<Group>, maxSize: Int):MutableList<Group>{
 
         val newGroupList : MutableList<Group> = mutableListOf()
         if (groupList.size == 1) return groupList

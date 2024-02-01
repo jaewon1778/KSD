@@ -90,6 +90,23 @@ class PlayerNameAdapter : RecyclerView.Adapter<PlayerNameAdapter.PlayerNameViewH
             }
 
         }
+        @SuppressLint("NotifyDataSetChanged")
+        fun bindForCalResDetail(player: Player){
+            binding.txtPlayerName.text = player.name
+            binding.txtPlayerName.textSize = 27F
+            binding.txtPlayerName.setPadding(25,5,25,5)
+
+            if (player.statePay) binding.txtPlayerName.setBackgroundResource(R.drawable.bg_player_name_show_detail)
+            else binding.txtPlayerName.setBackgroundResource(R.drawable.bg_player_name)
+
+            binding.txtPlayerName.setOnClickListener {
+                for (oPlayer in pnList){
+                    oPlayer.statePay = oPlayer.name == player.name
+                }
+                notifyDataSetChanged()
+                onDetailPSelectListener.onDetailPSelected(player)
+            }
+        }
 
     }
     interface PNBBChangeListener {
@@ -109,6 +126,14 @@ class PlayerNameAdapter : RecyclerView.Adapter<PlayerNameAdapter.PlayerNameViewH
         onActivePChangeListener = listener
     }
 
+    interface DetailPSelectListener {
+        fun onDetailPSelected(player: Player)
+    }
+    private lateinit var onDetailPSelectListener: DetailPSelectListener
+    fun setOnDetailPSelectListener (listener: DetailPSelectListener){
+        onDetailPSelectListener = listener
+    }
+
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -125,7 +150,7 @@ class PlayerNameAdapter : RecyclerView.Adapter<PlayerNameAdapter.PlayerNameViewH
             0 -> holder.bind(pnList[position])
             1 -> holder.bindForReceiptNBB(pnList[position])
             2 -> holder.bindForGameAssignPlayer(pnList[position])
-//                3 -> holder.bindForSettingPlayer(pnList[position])
+            3 -> holder.bindForCalResDetail(pnList[position])
         }
 
     }
