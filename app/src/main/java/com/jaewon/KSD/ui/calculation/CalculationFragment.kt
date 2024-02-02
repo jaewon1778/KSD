@@ -153,7 +153,7 @@ class CalculationFragment : Fragment() {
         binding.llResultNote.addView(newCalResView)
     }
 
-    @SuppressLint("MissingInflatedId", "InflateParams")
+    @SuppressLint("MissingInflatedId", "InflateParams", "SetTextI18n")
     //결과 View 생성
     private fun createCalResView(calResultInfoList:MutableList<Triple<String,String,Int>>):View{
         val newCalResView = LayoutInflater.from(mainActivity).inflate(R.layout.calculation_result_view,null,false)
@@ -169,9 +169,11 @@ class CalculationFragment : Fragment() {
         imgBtnShowDetail.setOnClickListener {
             if (inclDetail.visibility == View.GONE) {
                 inclDetail.visibility = View.VISIBLE
+                imgBtnShowDetail.setImageResource(R.drawable.baseline_expand_less_24)
             }
             else {
                 inclDetail.visibility = View.GONE
+                imgBtnShowDetail.setImageResource(R.drawable.baseline_expand_more_24)
             }
         }
         val rcyDetailPlayer = inclDetail.findViewById<RecyclerView>(R.id.rcy_calculation_result_detail_player)
@@ -198,8 +200,8 @@ class CalculationFragment : Fragment() {
                 detailDetailsAdapter.notifyDataSetChanged()
                 detailCalculationAdapter.notifyDataSetChanged()
 
-                txtDetailsAmount.text = calculationViewModel.detailDetailsAmountMap[player.name].toString()
-                txtCalculationAmount.text = calculationViewModel.detailCalculationAmountMap[player.name].toString()
+                txtDetailsAmount.text = DecimalFormat("###,###,###").format(calculationViewModel.detailDetailsAmountMap[player.name]) + "원"
+                txtCalculationAmount.text = DecimalFormat("###,###,###").format(calculationViewModel.detailCalculationAmountMap[player.name]) + "원"
             }
         })
 
@@ -218,14 +220,14 @@ class CalculationFragment : Fragment() {
         }
 
         detailCalculationAdapter.detailInfoList = calculationViewModel.detailCalculationMap[detailPlayerList[0].name]!!
+        detailCalculationAdapter.type = 1
         rcyDetailCalculation.apply {
             layoutManager = LinearLayoutManager(mainActivity)
             adapter = detailCalculationAdapter
         }
 
-        txtDetailsAmount.text = calculationViewModel.detailDetailsAmountMap[detailPlayerList[0].name].toString()
-        txtCalculationAmount.text = calculationViewModel.detailCalculationAmountMap[detailPlayerList[0].name].toString()
-
+        txtDetailsAmount.text = DecimalFormat("###,###,###").format(calculationViewModel.detailDetailsAmountMap[detailPlayerList[0].name]) + "원"
+        txtCalculationAmount.text = DecimalFormat("###,###,###").format(calculationViewModel.detailCalculationAmountMap[detailPlayerList[0].name]) + "원"
         return newCalResView
     }
 
