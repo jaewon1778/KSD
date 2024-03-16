@@ -6,6 +6,9 @@
 #### 홀덤이나 고스톱처럼 게임을 하고나서 잃고 딴 돈을 보내야할 때, 계산이 복잡하다면?
 #### 그런 나를 위해 준비한 KSD 전용 모임 정산 어플리케이션
 
+## How to use
+
+<img src="https://github.com/jaewon1778/KSD/assets/70744518/6d080fde-d2d9-44ff-a257-af5f99718f8f.png" width="75%" />
 
 ## Setting
 #### Android Studio : Flamingo | 2022.2.1 Patch 1 (target SDK : 33 / min SDK : 29)
